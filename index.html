@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GB/T 7714 参考文献校对工具</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">GB/T 7714-2025</p>
+        <h1>参考文献校对工具</h1>
+        <p class="subtitle">
+          粘贴参考文献，自动整理格式、章内查重、生成改动清单，并下载 Word。
+          真实性核验暂不启用。
+        </p>
+      </header>
+
+      <section class="panel controls">
+        <div class="field">
+          <label for="chapterTitle">章节标题</label>
+          <input id="chapterTitle" value="第一章参考文献" />
+        </div>
+        <div class="field">
+          <label for="caseMode">英文作者大小写</label>
+          <select id="caseMode">
+            <option value="source" selected>按 GB/T 原则：不强制改大小写</option>
+            <option value="upper">保留/转换为全大写</option>
+          </select>
+        </div>
+        <div class="field checkbox">
+          <label>
+            <input id="removeDuplicates" type="checkbox" checked />
+            删除章内重复并重新编号
+          </label>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>输入参考文献</h2>
+            <button id="sampleBtn" type="button" class="ghost">填入示例</button>
+          </div>
+          <textarea id="inputRefs" spellcheck="false" placeholder="在这里粘贴参考文献，例如：[1] 作者. 题名[J]. 刊名, 年, 卷(期): 页码."></textarea>
+          <div class="actions">
+            <button id="proofreadBtn" type="button">校对</button>
+            <button id="clearBtn" type="button" class="secondary">清空</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>校对后版本</h2>
+            <button id="copyBtn" type="button" class="ghost">复制</button>
+          </div>
+          <textarea id="outputRefs" spellcheck="false" readonly></textarea>
+          <div class="actions">
+            <button id="downloadDocxBtn" type="button">下载 Word</button>
+            <button id="downloadTxtBtn" type="button" class="secondary">下载改动清单</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>改动清单</h2>
+        <ul id="changeList" class="changes">
+          <li>等待校对。</li>
+        </ul>
+      </section>
+
+      <section class="panel note">
+        <h2>说明</h2>
+        <p>
+          本工具在浏览器本地运行，不上传文本。当前版本只做格式整理、基础纠错和章内查重；
+          不联网核验文献真实性。涉及 DOI、期刊、卷期页码是否真实一致的条目仍建议人工或联网核验。
+        </p>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

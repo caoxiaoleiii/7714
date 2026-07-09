@@ -11,6 +11,7 @@
 - 跨章重复默认保留，并在改动清单中提示。
 - 对疑似不存在、信息不完整或字段明显矛盾的文献标注“需核验”。
 - 可生成无标题页、无页眉、无页脚的分章 Word 文档。
+- 提供 GitHub/Gitee Pages 静态网页，可在浏览器本地完成基础校对并下载 Word。
 
 ## 默认规则
 
@@ -28,6 +29,9 @@
 gbt7714-reference-proofreader/
 ├─ SKILL.md
 ├─ README.md
+├─ index.html
+├─ app.js
+├─ styles.css
 ├─ agents/
 │  └─ openai.yaml
 ├─ references/
@@ -37,6 +41,28 @@ gbt7714-reference-proofreader/
 ```
 
 ## 使用方式
+
+### 网页版
+
+仓库根目录包含一个纯静态网页：
+
+```text
+index.html
+```
+
+启用 GitHub Pages 或 Gitee Pages 后，可直接在浏览器中使用。网页功能包括：
+
+- 粘贴参考文献。
+- 基础格式校对。
+- 章内重复删除。
+- 跨章重复提示。
+- 复制校对后版本。
+- 下载改动清单。
+- 下载 Word 文件。
+
+当前网页版不做联网真实性核验。
+
+### Codex Skill
 
 在 Codex 中可这样调用：
 
