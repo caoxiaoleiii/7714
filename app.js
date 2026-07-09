@@ -162,7 +162,7 @@ function normalizeEntry(entry, options, changes) {
   s = s.replace(/Jourmal/g, "Journal");
   s = s.replace(/ADDISION/g, "ADDISON");
   s = s.replace(/\bAI X Y\b/, "CAI X Y");
-  s = s.replace(/曹晓磊/g, "CAO X L");
+  s = normalizeAuthorBlock(s, changes);
   s = s.replace(/DING D,\s*et al\./g, "DING D, et al.");
 
   if (options.caseMode === "upper") {
@@ -183,11 +183,87 @@ function normalizeEntry(entry, options, changes) {
   if (/CAI X Y/.test(s) && /\bAI X Y\b/.test(entry)) {
     changes.push("修正疑似漏字作者：AI X Y -> CAI X Y。");
   }
-  if (/CAO X L/.test(s) && /曹晓磊/.test(entry)) {
-    changes.push("英文文献中中文作者改为拼音缩写：曹晓磊 -> CAO X L。");
+  return s;
+}
+
+function normalizeAuthorBlock(entry, changes) {
+  const parts = splitAuthorAndRest(entry);
+  if (!parts) return entry;
+
+  const { authorBlock, rest } = parts;
+  const normalizedBlock = isEnglishOrMixedAuthorBlock(authorBlock)
+    ? normalizeMixedEnglishAuthorBlock(authorBlock, changes)
+    : normalizeChineseAuthorBlock(authorBlock, changes);
+
+  return normalizedBlock + rest;
+}
+
+function splitAuthorAndRest(entry) {
+  const etAlMatch = entry.match(/^(.+?,\s*et al\.)\s+(.+)$/i);
+  if (etAlMatch) {
+    return {
+      authorBlock: etAlMatch[1].trim(),
+      rest: ` ${etAlMatch[2]}`,
+    };
   }
 
-  return s;
+  const firstDot = entry.indexOf(".");
+  if (firstDot < 0) return null;
+  return {
+    authorBlock: entry.slice(0, firstDot).trim(),
+    rest: entry.slice(firstDot),
+  };
+}
+
+function isEnglishOrMixedAuthorBlock(authorBlock) {
+  return /[A-Za-z]{2,}\s+[A-Z](\s+[A-Z])?/.test(authorBlock);
+}
+
+function normalizeMixedEnglishAuthorBlock(authorBlock, changes) {
+  let block = authorBlock;
+  const original = block;
+  const transliterations = {
+    "曹晓磊": "CAO X L",
+  };
+
+  Object.entries(transliterations).forEach(([cnName, romanized]) => {
+    if (block.includes(cnName)) {
+      block = block.replaceAll(cnName, romanized);
+      changes.push(`英文或混合作者区中中文作者改为拼音缩写：${cnName} -> ${romanized}。`);
+    }
+  });
+
+  block = block.replace(/,\s*et al\./i, ", et al.");
+  block = trimAuthorsBeforeEtAl(block, changes, "英文作者");
+  return block || original;
+}
+
+function normalizeChineseAuthorBlock(authorBlock, changes) {
+  let block = authorBlock.replace(/\s+/g, " ").trim();
+  block = block.replace(/\s*等$/, ", 等").replace(/,\s*,\s*等$/, ", 等");
+
+  const hasEtAl = /,\s*等$/.test(block);
+  if (!hasEtAl) return block;
+
+  const names = block.replace(/,\s*等$/, "").split(/\s*,\s*/).filter(Boolean);
+  if (names.length > 3) {
+    const original = block;
+    block = `${names.slice(0, 3).join(", ")}, 等`;
+    changes.push(`中文作者超过3人时列前3位加“等”：${original} -> ${block}。`);
+  }
+  return block;
+}
+
+function trimAuthorsBeforeEtAl(authorBlock, changes, label) {
+  const hasEtAl = /,\s*et al\.$/i.test(authorBlock);
+  if (!hasEtAl) return authorBlock;
+
+  const authors = authorBlock.replace(/,\s*et al\.$/i, "").split(/\s*,\s*/).filter(Boolean);
+  if (authors.length <= 3) return authorBlock;
+
+  const trimmed = `${authors.slice(0, 3).join(", ")}, et al.`;
+  changes.push(`${label}超过3人时列前3位加“et al.”：${authorBlock} -> ${trimmed}。`);
+  return trimmed;
 }
 
 function protectUrls(text, transform) {
@@ -201,11 +277,11 @@ function protectUrls(text, transform) {
 }
 
 function uppercaseEnglishAuthorBlock(entry) {
-  const firstDot = entry.indexOf(".");
-  if (firstDot < 0) return entry;
-  const authors = entry.slice(0, firstDot);
+  const parts = splitAuthorAndRest(entry);
+  if (!parts) return entry;
+  const authors = parts.authorBlock;
   if (!/[A-Za-z]/.test(authors) || /[\u4e00-\u9fa5]/.test(authors)) return entry;
-  return authors.toUpperCase() + entry.slice(firstDot);
+  return authors.toUpperCase() + parts.rest;
 }
 
 function makeDuplicateKey(entry) {
